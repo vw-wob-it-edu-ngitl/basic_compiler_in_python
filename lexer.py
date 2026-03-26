@@ -8,47 +8,79 @@ class Token:
         return f"{self.type.name}, {self.value}"
 
 class TokenType(Enum):
+    IDENTIFIER = "identifier"
+    STRING = "string"
     SEPARATOR = "separator"
     KEYWORD = "keyword"
     OPERATOR = "operator"
-    LITERAL = "literal"
+    NUMBER = "number"
 
-SEPARATORS = ["(",")","{","}",";"]
-KEYWORDS = ["int", "return", "main"]
+SEPARATORS = ["(",")","{","}", ","]
+KEYWORDS = ["def", "return", "print"]
 OPERATORS = ["+","-","*","/", "="]
-tokens = []
 
 def readfile(file):
     with open(file) as f:
-        return f.read().replace("\r", "").replace("\n", "").replace(" ", "")
-    
-def checkkey(s):
-    if s in SEPARATORS:
-        tokens.append(Token(TokenType.SEPARATOR, s))
-        return True
-    if s in KEYWORDS:
-        tokens.append(Token(TokenType.KEYWORD, s))
-        return True
-    if s in OPERATORS:
-        tokens.append(Token(TokenType.OPERATOR, s))
-        return True
-    else:
-        return False
+        return f.read()
     
 def lex(file):
+    tokens = []
     code = readfile(file)
-    substr = ""
-    for c in code:
-        substr += c
-        if c in SEPARATORS and len(substr)>1:
-            tokens.append(Token(TokenType.LITERAL, substr[0:-1]))
-            substr = ""
-            checkkey(c)
-        if checkkey(substr):
-            substr = ""
+    i = 0
+    while i < len(code):
+        c = code[i]
+
+        # skip whitespace
+        if c.isspace():
+            i += 1
+            continue
+
+        # identifiers / keywords
+        if c.isalpha():
+            start = i
+            while i < len(code) and code[i].isalnum():
+                i +=1
+            
+            word = code[start:i]
+            if word in KEYWORDS:
+                tokens.append(Token(TokenType.KEYWORD, word))
+            else:
+                tokens.append(Token(TokenType.IDENTIFIER, word))
             continue
         
+        # numbers
+        if c.isdigit():
+            start = i
+            while i < len(code) and code[i].isdigit():
+                i += 1
+            
+            number = code[start:i]
+            tokens.append(Token(TokenType.NUMBER, number))
+            continue
 
-    
-    for token in tokens:
-        print(token)
+        # string
+        if c == "'" or c == '"':
+            i += 1
+            start = i
+
+            while i < len(code) and code[i] != "'" or i < len(code) and code[i] != '"':
+                i += 1
+            
+            string_value = code[start:i]
+            tokens.append(Token(TokenType.STRING, string_value))
+            i += 1
+            continue
+
+        # operators
+        if c in OPERATORS:
+            tokens.append(Token(TokenType.OPERATOR, c))
+            i += 1
+            continue
+
+        # separators
+        if c in SEPARATORS:
+            tokens.append(Token(TokenType.SEPARATOR, c))
+            i += 1
+            continue
+        
+    return tokens
