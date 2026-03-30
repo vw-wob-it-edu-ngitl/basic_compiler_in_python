@@ -1,0 +1,11 @@
+def functionName(parameter, parameter2){
+    a = 1
+    b = 2
+    c = a + b
+    d = c + a * b
+    name = 'herrou'
+    m = ((3 + 5) * 7 ) / 3
+    print(d)
+    print(name)
+    return m
+}

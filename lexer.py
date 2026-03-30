@@ -18,14 +18,12 @@ class TokenType(Enum):
 SEPARATORS = ["(",")","{","}", ","]
 KEYWORDS = ["def", "return", "print"]
 OPERATORS = ["+","-","*","/", "="]
-
-def readfile(file):
-    with open(file) as f:
-        return f.read()
     
 def lex(file):
+    with open(file) as f:
+        code = f.read()
+    
     tokens = []
-    code = readfile(file)
     i = 0
     while i < len(code):
         c = code[i]
@@ -63,7 +61,7 @@ def lex(file):
             i += 1
             start = i
 
-            while i < len(code) and code[i] != "'" or i < len(code) and code[i] != '"':
+            while i < len(code) and code[i] != "'" and code[i] != '"':
                 i += 1
             
             string_value = code[start:i]
