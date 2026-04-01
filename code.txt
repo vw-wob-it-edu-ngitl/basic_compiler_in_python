@@ -1,3 +1,3 @@
-int main(){
-    return help;
+def name(a = 2, b = 4){
+    print(a + b)
 }
