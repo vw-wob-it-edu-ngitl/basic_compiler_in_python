@@ -17,16 +17,30 @@ class CodeGenerator:
         self.emit(f"mov rax, {node.value}")
     
     def gen_Var(self, node):
-        if hasattr(self, "current_params") and node.name in self.current_params:
+        name = node.name
+
+        if hasattr(self, "current_params") and node.name in self.current_locals:
             offset = self.current_params[node.name]
             self.emit(f"mov rax, [rsp + {offset}]") 
+        elif hasattr(self, "current_params") and name in self.current_params:
+            offset = self.current_params[name]
+            self.emit(f"mov rax, [rsp + {offset}]")
         else:
-            self.emit(f"mov rax, [{node.name}]")
+            self.emit(f"mov rax, [{name}]")
 
     def gen_Assignment(self, node):
         self.generate(node.value)
-        self.emit(f"mov [{node.name}], rax")
-    
+        name = node.name
+
+        if hasattr(self, "current_locals") and name in self.current_locals:
+            offset = self.current_locals[name]
+            self.emit(f"mov [rsp + {offset}], rax")
+        elif hasattr(self, "current_params") and name in self.current_params:
+            offset = self.current_params[name]
+            self.emit(f"mov [rsp + {offset}], rax")
+        else:
+            self.emit(f"mov [{name}], rax")
+
     def gen_Print(self, node):
         self.generate(node.value)
         self.emit("print rax")
@@ -56,18 +70,32 @@ class CodeGenerator:
 
     def gen_Function(self, node):
         self.emit(f"FUNC {node.name}")
+
         self.current_params = {}
+        self.current_locals = {}
 
         for i, param in enumerate(node.params):
             offset = i * 8
             self.current_params[param] = offset
             self.emit(f"; {param} at [rsp + {offset}]")
+
+        local_index = len(node.params)
+        
+        for stmt in node.body:
+            if type(stmt) in node.body:
+                var_name = stmt.name
+                if var_name not in self.current_params:
+                    offset = local_index * 8
+                    self.current_locals[local_index] = offset
+                    local_index += 1
+                    self.emit(f"; local {var_name} at [rsp + {offset}]")
         
         for stmt in node.body:
             self.generate(stmt)
 
         self.emit("END_FUNC\n")
         self.current_params = {}
+        self.current_locals = {}
 
     def gen_FunctionCall(self, node):
         for arg in reversed(node.args):
