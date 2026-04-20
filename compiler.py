@@ -7,10 +7,14 @@ file = "code.txt"
 tokens = lex(file)
 parser = Parser(tokens)
 ast = parser.parse()
-
 gen = CodeGenerator()
 
 for stmt in ast:
     gen.generate(stmt)
 
-print("\n".join(gen.code))
+program = gen.get_program()
+
+with open("output.asm", "w") as f:
+    f.write(program)
+
+print("Assembly written to output.asm")

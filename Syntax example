@@ -9,3 +9,5 @@ def functionName(parameter, parameter2){
     print(name)
     return m
 }
+
+print(functionName(3,5))
