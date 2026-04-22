@@ -1,3 +1,6 @@
-def name(a = 2, b = 4){
-    print(a + b)
+def test(){
+    name = "hello"
+    return 5
 }
+
+print(test())
