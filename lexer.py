@@ -1,11 +1,4 @@
 from enum import Enum 
-class Token:
-    def __init__(self, type: TokenType, value: str):
-        self.type = type
-        self.value = value
-
-    def __repr__ (self):
-        return f"{self.type.name}, {self.value}"
 
 class TokenType(Enum):
     IDENTIFIER = "identifier"
@@ -14,6 +7,15 @@ class TokenType(Enum):
     KEYWORD = "keyword"
     OPERATOR = "operator"
     NUMBER = "number"
+
+class Token:
+    def __init__(self, type: TokenType, value: str):
+        self.type = type
+        self.value = value
+
+    def __repr__ (self):
+        return f"{self.type.name}, {self.value}"
+
 
 SEPARATORS = ["(",")","{","}", ","]
 KEYWORDS = ["def", "return", "print"]

@@ -59,6 +59,14 @@ class Function:
     def __repr__(self):
         return f"Function({self.name}, {self.params}, {self.body})" 
     
+class FunctionCall:
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+    
+    def __repr__(self):
+        return f"Call({self.name}, {self.args})"
+    
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -84,12 +92,28 @@ class Parser:
         
         #variable
         elif token.type.name == "IDENTIFIER":
+            name = token.value
             self.eat()
-            return Var(token.value)
+
+            #function call
+            if self.current() and self.current().value == "(":
+                self.eat() # (
+
+                args = []
+                if self.current().value != ")":
+                    args.append(self.expression())
+
+                    while self.current().value == ",":
+                        self.eat()
+                        args.append(self.expression())
+                
+                self.eat() # )
+                return FunctionCall(name, args)
+            return Var(name)
         
         #string
         elif token.type.name == "STRING":
-            self.eat
+            self.eat()
             return String(token.value)
         
         #parantheses
@@ -123,19 +147,19 @@ class Parser:
     
     def return_statement(self):
         self.eat()
-        if self.current() == "(":
+        if self.current() and self.current().value == "(":
             self.eat()
         value = self.expression()
-        if self.current() == ")":
+        if self.current().value == ")":
             self.eat()
         return Return(value)
 
     def print_statement(self):
         self.eat()
-        if self.current() == "(":
+        if self.current() and self.current().value == "(":
             self.eat()
         value = self.expression()
-        if self.current() == ")":
+        if self.current().value == ")":
             self.eat()
         return Print(value)
 
@@ -144,14 +168,16 @@ class Parser:
         if token is None:
             return None
 
-        if token.type.name == "IDENTIFIER":
+        if token.type.name == "KEYWORD":
+            if token.value == "def":
+                return self.function()
+            elif token.value == "print":
+                return self.print_statement()
+            elif token.value == "return":
+                return self.return_statement()
+
+        elif token.type.name == "IDENTIFIER":
             return self.assignment()
-        elif token.type.name == "KEYWORD" and token.value == "def":
-            return self.function()
-        elif token.type.name == "KEYWORD" and token.value == "print":
-            return self.print_statement()
-        elif token.type.name == "KEYWORD" and token.value == "return":
-            return self.return_statement()
 
         else:
             raise Exception(f"Unexpected token: {token}")
@@ -166,14 +192,9 @@ class Parser:
         return Assignment(name, value)
     
     def parse(self):
-        if self.current().value == "def":
-            return self.function()
         statements = []
-
         while self.current() is not None:
-            stmt = self.statement()
-            statements.append(stmt)
-        
+            statements.append(self.statement())
         return statements
     
     def function(self):
@@ -184,7 +205,7 @@ class Parser:
         params = []
         if self.current().value != ")":
             params.append(self.current().value)
-            self.eat #parameter token
+            self.eat() #parameter token
 
             while self.current().value == ",":
                 self.eat() #,
@@ -195,7 +216,7 @@ class Parser:
         self.eat() #{
 
         body = []
-        while self.current().value != "}":
+        while self.current() and self.current().value != "}":
             body.append(self.statement())
         self.eat()
 
